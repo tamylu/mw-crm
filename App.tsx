@@ -392,10 +392,10 @@ const App: React.FC = () => {
 };
 
 const StatCard = ({ title, value, icon, color, onClick, clickable }: any) => (
-    <div 
+    <div>
         onClick={clickable ? onClick : undefined}
         className={`bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 transition-all ${clickable ? 'cursor-pointer hover:shadow-md hover:scale-[1.02]' : ''}`}
-    >
+  
         <div className={`p-4 rounded-full ${color}`}>
             {icon}
         </div>
