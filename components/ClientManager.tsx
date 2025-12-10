@@ -123,25 +123,25 @@ const ClientManager: React.FC<ClientManagerProps> = ({ clients, onAddClient, onD
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
-                <textarea
+                <textarea>
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none resize-none h-20 bg-white text-slate-900"
                   value={newClient.address}
                   onChange={(e) => setNewClient({...newClient, address: e.target.value})}
-                ></textarea>
+                </textarea>
               </div>
               
               <div className="pt-4 flex gap-3">
-                <button
+                <button>
                     type="button"
                     onClick={() => setIsModalOpen(false)}
                     className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium"
-                >
+                
                     Cancelar
                 </button>
-                <button
+                <button>
                     type="submit"
                     className="flex-1 px-4 py-2 bg-lime-600 text-white rounded-lg hover:bg-lime-700 font-medium shadow-md"
-                >
+                
                     Guardar
                 </button>
               </div>
