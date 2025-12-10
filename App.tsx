@@ -238,7 +238,12 @@ const App: React.FC = () => {
                     onClick={() => openReport('completed')}
                     clickable
                 />
-                <StatCard title="Valor Inventario" value={`$${stats.estimatedRevenue.toLocaleString()}`} icon={<DollarSign className="text-lime-600" />} color="bg-lime-50" />
+                <StatCard 
+                  title="Valor Inventario" 
+                  value={`$${stats.estimatedRevenue.toLocaleString()}`} 
+                  icon={<DollarSign className="text-lime-600" />} 
+                  color="bg-lime-50" 
+                />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -391,11 +396,12 @@ const App: React.FC = () => {
   );
 };
 
-const StatCard = ({ title, value, icon, color, onClick, clickable }: any) => (
-    <div>
+const StatCard = ({ title, value, icon, color, onClick, clickable }: any) => {
+  return (
+    <div 
         onClick={clickable ? onClick : undefined}
         className={`bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 transition-all ${clickable ? 'cursor-pointer hover:shadow-md hover:scale-[1.02]' : ''}`}
-  
+    >
         <div className={`p-4 rounded-full ${color}`}>
             {icon}
         </div>
@@ -405,7 +411,8 @@ const StatCard = ({ title, value, icon, color, onClick, clickable }: any) => (
             {clickable && <p className="text-xs text-lime-600 mt-1 font-medium">Ver detalle &rarr;</p>}
         </div>
     </div>
-);
+  );
+};
 
 const SparklesIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
