@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import Logo from './Logo';
 import { LogIn, ArrowRight } from 'lucide-react';
 
 interface LoginProps {
-  onLogin: (email: string, pass: string) => Promise<boolean>;
+  onLogin: (email: string, pass: string) => Promise<{ success: boolean; message?: string }>;
   onGoToStore: () => void;
 }
 
@@ -18,9 +19,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onGoToStore }) => {
     setIsLoading(true);
 
     try {
-      const success = await onLogin(email, password);
-      if (!success) {
-        setError('Credenciales inválidas o usuario inactivo.');
+      const result = await onLogin(email, password);
+      if (!result.success) {
+        setError(result.message || 'Credenciales inválidas o usuario inactivo.');
       }
     } catch (err: any) {
       if (err.message.includes('network error')) {

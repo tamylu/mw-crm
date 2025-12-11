@@ -64,3 +64,9 @@ export interface ChartData {
   name: string;
   value: number;
 }
+
+export interface LoginResult {
+  success: boolean;
+  message: string;
+  user?: Seller;
+}

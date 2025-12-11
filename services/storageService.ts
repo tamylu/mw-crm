@@ -1,4 +1,4 @@
-import { Appointment, Product, Seller, Client, Sale } from '../types';
+import { Appointment, Product, Seller, Client, Sale, LoginResult } from '../types';
 import { supabase } from '../supabaseClient';
 
 // --- SESSION MANAGEMENT ---
@@ -37,7 +37,7 @@ export const clearSession = () => {
 
 // --- AUTH ---
 
-export const loginSeller = async (email: string, password: string): Promise<Seller | null> => {
+export const loginSeller = async (email: string, password: string): Promise<LoginResult> => {
   // 1. Authenticate with Supabase
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
@@ -46,17 +46,17 @@ export const loginSeller = async (email: string, password: string): Promise<Sell
 
   // 2. Handle authentication errors
   if (authError) {
-    console.error('Login failed:', authError.message);
+    console.error('Supabase auth error:', authError);
     if (authError.message.includes('Failed to fetch')) {
       throw new Error('network error');
     }
-    return null;
+    return { success: false, message: 'Credenciales inválidas.' };
   }
 
   // This check is for safety, though Supabase should return a user on success
   if (!authData?.user) {
     console.error('Login successful but no user object returned.');
-    return null;
+    return { success: false, message: 'No se pudo obtener el usuario.' };
   }
 
   // 3. Fetch the seller's profile and check if it's active
@@ -69,17 +69,17 @@ export const loginSeller = async (email: string, password: string): Promise<Sell
 
   // 4. Handle profile errors or inactive profile
   if (error || !data) {
-    console.error('Could not find active seller profile:', error?.message);
+    console.error('Could not find active seller profile:', error);
     // Sign out to prevent a lingering auth session without a valid app profile
     await supabase.auth.signOut();
     clearSession();
-    return null;
+    return { success: false, message: 'El usuario está inactivo o no tiene un perfil de vendedor.' };
   }
 
   // 5. Success: save session and return user data
   const user = data as Seller;
   saveSession(user);
-  return user;
+  return { success: true, user, message: 'Inicio de sesión exitoso.' };
 };
 
 // --- SALES ---

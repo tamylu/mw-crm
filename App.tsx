@@ -90,14 +90,14 @@ analyzeSchedule(appointments).then(setAiInsight);
 }
 }, [appointments]);
 // --- Handlers (Auth) ---
-const handleLogin = async (email: string, pass: string): Promise<boolean> => {
-const user = await loginSeller(email, pass);
-if (user) {
-setCurrentUser(user);
-return true;
-}
-return false;
-};
+const handleLogin = async (email: string, pass: string): Promise<{ success: boolean; message?: string }> => {
+    const result = await loginSeller(email, pass);
+    if (result.success && result.user) {
+      setCurrentUser(result.user);
+      return { success: true };
+    }
+    return { success: false, message: result.message };
+  };
 const handleLogout = () => {
 clearSession();
 setCurrentUser(null);
