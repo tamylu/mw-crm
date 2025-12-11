@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import AppointmentList from './components/AppointmentList';
@@ -5,36 +6,46 @@ import ProductManager from './components/ProductManager';
 import SellerManager from './components/SellerManager';
 import ClientManager from './components/ClientManager';
 import PublicStore from './components/PublicStore';
+import Login from './components/Login';
+import Logo from './components/Logo';
 import { ViewState, Appointment, Product, Seller, Client } from './types';
 import { 
   fetchAppointments, createAppointment, updateAppointmentStatus, deleteAppointment,
   fetchProducts, createProduct, deleteProduct,
   fetchSellers, createSeller, deleteSeller,
-  fetchClients, createClient, deleteClient
+  fetchClients, createClient, deleteClient,
+  loginSeller
 } from './services/storageService';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Users, DollarSign, CalendarCheck, CheckCircle, X } from 'lucide-react';
+import { Users, DollarSign, CalendarCheck, CheckCircle, X, Menu } from 'lucide-react';
 import { analyzeSchedule } from './services/geminiService';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.DASHBOARD);
   
+  // UX State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Auth State
+  const [currentUser, setCurrentUser] = useState<Seller | null>(null);
+
   // Data State
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   
-  // UX State
   const [aiInsight, setAiInsight] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Report Modal State
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportType, setReportType] = useState<'all' | 'pending' | 'completed'>('all');
 
-  // Load Data on Mount
+  // Load Data Effect (Only if logged in)
   useEffect(() => {
+    if (!currentUser) return;
+
     const loadData = async () => {
       setLoading(true);
       try {
@@ -56,7 +67,7 @@ const App: React.FC = () => {
       }
     };
     loadData();
-  }, []);
+  }, [currentUser]);
 
   // AI Insights
   useEffect(() => {
@@ -64,6 +75,24 @@ const App: React.FC = () => {
         analyzeSchedule(appointments).then(setAiInsight);
     }
   }, [appointments]);
+
+  // --- Handlers (Auth) ---
+
+  const handleLogin = async (email: string, pass: string): Promise<boolean> => {
+      const user = await loginSeller(email, pass);
+      if (user) {
+          setCurrentUser(user);
+          setCurrentView(ViewState.DASHBOARD);
+          return true;
+      }
+      return false;
+  };
+
+  const handleLogout = () => {
+      setCurrentUser(null);
+      setCurrentView(ViewState.DASHBOARD); 
+      setIsSidebarOpen(false);
+  };
 
   // --- Handlers (Async Wrappers) ---
 
@@ -77,13 +106,11 @@ const App: React.FC = () => {
   };
 
   const handleStatusChange = async (id: string, status: Appointment['status']) => {
-    // Optimistic update
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
     await updateAppointmentStatus(id, status);
   };
 
   const handleDeleteAppointment = async (id: string) => {
-    // Optimistic update
     setAppointments(prev => prev.filter(a => a.id !== id));
     await deleteAppointment(id);
   };
@@ -126,7 +153,30 @@ const App: React.FC = () => {
       await deleteClient(id);
   };
 
-  // --- Dashboard Logic ---
+  // --- View Logic ---
+
+  if (currentView === ViewState.PUBLIC_STORE) {
+      return (
+        <PublicStoreWrapper 
+            onBack={() => {
+                if (currentUser) setCurrentView(ViewState.DASHBOARD);
+                else setCurrentView(ViewState.DASHBOARD); 
+            }}
+            onAddClient={handleAddClient}
+        />
+      );
+  }
+
+  if (!currentUser) {
+      return (
+        <Login 
+            onLogin={handleLogin} 
+            onGoToStore={() => setCurrentView(ViewState.PUBLIC_STORE)}
+        />
+      );
+  }
+
+  // --- Authenticated Dashboard Logic ---
 
   const getDashboardStats = () => {
     const totalAppts = appointments.length;
@@ -140,7 +190,6 @@ const App: React.FC = () => {
 
   const stats = getDashboardStats();
 
-  // Prepare chart data (Appointments by date)
   const chartData = appointments.reduce((acc: any[], curr) => {
     const date = curr.date;
     const existing = acc.find(item => item.date === date);
@@ -169,23 +218,12 @@ const App: React.FC = () => {
       return seller ? seller.name : '-';
   };
 
-  // Render Public Store if selected
-  if (currentView === ViewState.PUBLIC_STORE) {
-      return (
-        <PublicStore 
-          products={products} 
-          onBack={() => setCurrentView(ViewState.DASHBOARD)}
-          onAddClient={handleAddClient}
-        />
-      );
-  }
-
   if (loading) {
       return (
           <div className="min-h-screen flex items-center justify-center bg-slate-50">
               <div className="flex flex-col items-center gap-4">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lime-600"></div>
-                  <p className="text-slate-500 font-medium">Cargando datos...</p>
+                  <p className="text-slate-500 font-medium">Cargando sistema...</p>
               </div>
           </div>
       );
@@ -193,27 +231,47 @@ const App: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar currentView={currentView} onChangeView={setCurrentView} />
+      <Sidebar 
+        currentView={currentView} 
+        onChangeView={setCurrentView} 
+        onLogout={handleLogout}
+        userName={currentUser.name}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
       
-      <main className="flex-1 p-8 overflow-y-auto h-screen">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 overflow-y-auto h-screen w-full relative">
+        {/* Mobile Header */}
+        <div className="md:hidden bg-white border-b border-slate-200 p-4 sticky top-0 z-30 flex items-center justify-between shadow-sm">
+            <div className="w-32">
+                 <Logo className="w-full h-auto text-slate-900" />
+            </div>
+            <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+            >
+                <Menu size={24} />
+            </button>
+        </div>
+
+        <div className="max-w-7xl mx-auto p-4 md:p-8">
           
           {currentView === ViewState.DASHBOARD && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-              <div className="flex flex-col md:flex-row justify-between items-end">
+            <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-900">Panel Principal</h2>
-                    <p className="text-slate-500 mt-1">Bienvenido de nuevo. Esto es lo que sucede hoy.</p>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900">Panel Principal</h2>
+                    <p className="text-slate-500 mt-1 text-sm md:text-base">Hola, {currentUser.name}. Esto es lo que sucede hoy.</p>
                 </div>
                 {aiInsight && (
-                    <div className="mt-4 md:mt-0 bg-lime-50 border border-lime-200 p-3 rounded-lg max-w-md text-sm text-lime-900 flex gap-2 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="bg-lime-50 border border-lime-200 p-3 rounded-lg w-full md:max-w-md text-sm text-lime-900 flex gap-2 animate-in fade-in slide-in-from-bottom-2">
                         <SparklesIcon />
                         <p>{aiInsight}</p>
                     </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <StatCard 
                     title="Total de Citas" 
                     value={stats.totalAppts} 
@@ -246,8 +304,8 @@ const App: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-bold text-slate-800 mb-6">Actividad de Citas</h3>
                     <div className="h-64 w-full">
                         {chartData.length > 0 ? (
@@ -255,7 +313,7 @@ const App: React.FC = () => {
                                 <BarChart data={chartData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                     <XAxis dataKey="date" tick={{fontSize: 12}} tickMargin={10} />
-                                    <YAxis allowDecimals={false} tick={{fontSize: 12}} />
+                                    <YAxis allowDecimals={false} tick={{fontSize: 12}} width={30} />
                                     <Tooltip 
                                         cursor={{fill: '#f1f5f9'}} 
                                         contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
@@ -273,16 +331,16 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-bold text-slate-800 mb-4">Productos Recientes</h3>
                     <div className="space-y-4">
                         {products.slice(-3).map(p => (
                             <div key={p.id} className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-lg transition-colors">
-                                <div className="w-12 h-12 bg-slate-200 rounded-md overflow-hidden">
+                                <div className="w-12 h-12 bg-slate-200 rounded-md overflow-hidden shrink-0">
                                     {p.images[0] && <img src={p.images[0]} alt="" className="w-full h-full object-cover" />}
                                 </div>
-                                <div>
-                                    <p className="font-medium text-slate-800">{p.name}</p>
+                                <div className="min-w-0">
+                                    <p className="font-medium text-slate-800 truncate">{p.name}</p>
                                     <p className="text-xs text-slate-500">${p.price}</p>
                                 </div>
                             </div>
@@ -335,14 +393,14 @@ const App: React.FC = () => {
       {reportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="text-xl font-bold text-slate-800">
-                Reporte de Citas: {reportType === 'all' ? 'Todas' : reportType === 'pending' ? 'Pendientes' : 'Realizadas'}
+            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="text-lg md:text-xl font-bold text-slate-800">
+                Reporte: {reportType === 'all' ? 'Todas' : reportType === 'pending' ? 'Pendientes' : 'Realizadas'}
               </h3>
               <button onClick={() => setReportModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24}/></button>
             </div>
-            <div className="overflow-y-auto p-0 flex-1">
-                <table className="w-full text-left border-collapse">
+            <div className="overflow-auto p-0 flex-1">
+                <table className="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
                         <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
                             <th className="p-4 font-semibold border-b border-slate-100">Cliente</th>
@@ -370,7 +428,7 @@ const App: React.FC = () => {
                                             {appt.status === 'completed' ? 'Realizada' : appt.status === 'pending' ? 'Pendiente' : appt.status === 'cancelled' ? 'Cancelada' : appt.status}
                                         </span>
                                     </td>
-                                    <td className="p-4 text-slate-500 text-sm italic">{appt.notes || '-'}</td>
+                                    <td className="p-4 text-slate-500 text-sm italic max-w-xs truncate">{appt.notes || '-'}</td>
                                 </tr>
                             ))
                         ) : (
@@ -384,7 +442,7 @@ const App: React.FC = () => {
             <div className="p-4 border-t border-slate-100 bg-slate-50 text-right">
                 <button 
                     onClick={() => setReportModalOpen(false)}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 font-medium"
+                    className="w-full md:w-auto px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 font-medium"
                 >
                     Cerrar Reporte
                 </button>
@@ -396,17 +454,28 @@ const App: React.FC = () => {
   );
 };
 
+// Helper component
+const PublicStoreWrapper = ({ onBack, onAddClient }: { onBack: () => void, onAddClient: any }) => {
+    const [products, setProducts] = useState<Product[]>([]);
+    
+    useEffect(() => {
+        fetchProducts().then(setProducts);
+    }, []);
+
+    return <PublicStore products={products} onBack={onBack} onAddClient={onAddClient} />;
+}
+
 const StatCard = ({ title, value, icon, color, onClick, clickable }: any) => {
   return (
     <div 
         onClick={clickable ? onClick : undefined}
         className={`bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 transition-all ${clickable ? 'cursor-pointer hover:shadow-md hover:scale-[1.02]' : ''}`}
     >
-        <div className={`p-4 rounded-full ${color}`}>
+        <div className={`p-4 rounded-full ${color} shrink-0`}>
             {icon}
         </div>
-        <div>
-            <p className="text-slate-500 text-sm font-medium">{title}</p>
+        <div className="min-w-0">
+            <p className="text-slate-500 text-sm font-medium truncate">{title}</p>
             <p className="text-2xl font-bold text-slate-800">{value}</p>
             {clickable && <p className="text-xs text-lime-600 mt-1 font-medium">Ver detalle &rarr;</p>}
         </div>
@@ -415,7 +484,7 @@ const StatCard = ({ title, value, icon, color, onClick, clickable }: any) => {
 };
 
 const SparklesIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
         <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
     </svg>
 );
