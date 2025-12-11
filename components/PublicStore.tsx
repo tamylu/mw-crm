@@ -108,11 +108,12 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center opacity-20"></div>
         <div className="max-w-7xl mx-auto relative z-10 text-center">
           <h1 className="text-3xl md:text-6xl font-bold mb-4 md:mb-6 tracking-tight">
-            Calidad Premium <br />
-            <span className="text-lime-400">Directo a ti</span>
+           Somos tu aliado estratégico, <br />
+            <span className="text-lime-400"> potenciamos tu negocio.</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-300 mb-6 md:mb-8 max-w-2xl mx-auto px-4">
-            Explora nuestra colección exclusiva de productos seleccionados cuidadosamente para mejorar tu estilo de vida.
+            
+Tu enlace confiable para ventas de autos, transacciones inmobiliarias y proyectos de construcción sin complicaciones.
           </p>
           <button 
             onClick={openCarousel}
