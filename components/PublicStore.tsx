@@ -105,7 +105,7 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
 
       {/* Hero Section */}
       <div className="bg-slate-950 text-white py-12 md:py-20 px-4 relative overflow-hidden">
-        import portada from '/assets/portada.png';
+        import portada from '../main/assets/portada.png';
 
 <div
   className="absolute inset-0 bg-cover bg-center opacity-20"
