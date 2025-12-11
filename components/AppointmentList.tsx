@@ -220,8 +220,8 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, sellers
                     onChange={(e) => setNewAppt({...newAppt, service: e.target.value})}
                 >
                     <option className="text-slate-900">Consulta</option>
-                    <option className="text-slate-900">Servicio Estándar</option>
-                    <option className="text-slate-900">Paquete Premium</option>
+                    <option className="text-slate-900">Venta</option>
+                    <option className="text-slate-900">Pagos</option>
                     <option className="text-slate-900">Seguimiento</option>
                 </select>
               </div>
