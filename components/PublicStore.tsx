@@ -104,9 +104,8 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
       </header>
 
       {/* Hero Section */}
+       import portada from '../main/assets/portada.png';
       <div className="bg-slate-950 text-white py-12 md:py-20 px-4 relative overflow-hidden">
-        import portada from '../main/assets/portada.png';
-
 <div
   className="absolute inset-0 bg-cover bg-center opacity-20"
   style={{ backgroundImage: `url(${portada})` }}
