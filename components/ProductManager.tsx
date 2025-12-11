@@ -171,11 +171,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onAddProduct,
                             <select className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none bg-white text-slate-900"
                                 value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
                             >
-                                <option>General</option>
-                                <option>Electrónica</option>
+                                <option>Venta</option>
+                                <option>Posventa</option>
                                 <option>Servicios</option>
-                                <option>Belleza</option>
-                                <option>Hogar</option>
+                               
                             </select>
                         </div>
                     </div>
