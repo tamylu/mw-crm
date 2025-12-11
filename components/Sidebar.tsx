@@ -8,12 +8,13 @@ interface SidebarProps {
   currentView: ViewState;
   onChangeView: (view: ViewState) => void;
   onLogout?: () => void;
+  onConfig?: () => void;
   userName?: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, onLogout, userName, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, onLogout, onConfig, userName, isOpen, onClose }) => {
   const navItems = [
     { id: ViewState.DASHBOARD, label: 'Panel Principal', icon: <LayoutDashboard size={20} /> },
     { id: ViewState.APPOINTMENTS, label: 'Citas', icon: <CalendarDays size={20} /> },
@@ -82,7 +83,13 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, onLogout, 
                   <p className="text-sm font-medium text-white truncate">{userName}</p>
               </div>
           )}
-          <button className="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors w-full">
+          <button 
+            onClick={() => {
+                if (onConfig) onConfig();
+                onClose();
+            }}
+            className="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors w-full"
+          >
             <Settings size={18} />
             <span className="text-sm">Configuración</span>
           </button>
