@@ -5,7 +5,7 @@ export enum ViewState {
   PRODUCTS = 'PRODUCTS',
   SELLERS = 'SELLERS',
   CLIENTS = 'CLIENTS',
-  PUBLIC_STORE = 'PUBLIC_STORE';
+  PUBLIC_STORE = 'PUBLIC_STORE'
 }
 
 export interface Appointment {
@@ -35,6 +35,7 @@ export interface Seller {
   email: string;
   phone: string;
   active: boolean;
+  password?: string; // Added for authentication
 }
 
 export interface Client {
