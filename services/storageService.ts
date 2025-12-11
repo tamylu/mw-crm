@@ -38,23 +38,28 @@ export const clearSession = () => {
 // --- AUTH ---
 
 export const loginSeller = async (email: string, password: string): Promise<Seller | null> => {
+  // 1. Authenticate with Supabase
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
-  if (authError || !authData.user) {
+  // 2. Handle authentication errors
   if (authError) {
-    console.error('Login failed:', authError);
+    console.error('Login failed:', authError.message);
     if (authError.message.includes('Failed to fetch')) {
       throw new Error('network error');
     }
     return null;
   }
-  if (!authData.user) {
+
+  // This check is for safety, though Supabase should return a user on success
+  if (!authData?.user) {
+    console.error('Login successful but no user object returned.');
     return null;
   }
 
+  // 3. Fetch the seller's profile and check if it's active
   const { data, error } = await supabase
     .from('sellers')
     .select('*')
@@ -62,14 +67,16 @@ export const loginSeller = async (email: string, password: string): Promise<Sell
     .eq('active', true)
     .single();
 
+  // 4. Handle profile errors or inactive profile
   if (error || !data) {
-    console.error('Could not find active seller profile:', error);
-    // Also sign out the user from Supabase auth if their profile is not active
+    console.error('Could not find active seller profile:', error?.message);
+    // Sign out to prevent a lingering auth session without a valid app profile
     await supabase.auth.signOut();
     clearSession();
     return null;
   }
 
+  // 5. Success: save session and return user data
   const user = data as Seller;
   saveSession(user);
   return user;

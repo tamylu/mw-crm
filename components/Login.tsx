@@ -22,8 +22,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, onGoToStore }) => {
       if (!success) {
         setError('Credenciales inválidas o usuario inactivo.');
       }
-    } catch (err) {
-      setError('Ocurrió un error al intentar ingresar.');
     } catch (err: any) {
       if (err.message.includes('network error')) {
         setError('Error de conexión. Por favor, revisa tu conexión a internet.');
