@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ViewState } from '../types';
-import { LayoutDashboard, CalendarDays, Package, Settings, LogOut, UsersRound, Users, Globe, X } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Package, Settings, LogOut, UsersRound, Users, Globe, X, ShoppingBag } from 'lucide-react';
 import Logo from './Logo';
 
 interface SidebarProps {
@@ -17,6 +17,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, onLogout, onConfig, userName, isOpen, onClose }) => {
   const navItems = [
     { id: ViewState.DASHBOARD, label: 'Panel Principal', icon: <LayoutDashboard size={20} /> },
+    { id: ViewState.SALES, label: 'Ventas Realizadas', icon: <ShoppingBag size={20} /> },
     { id: ViewState.APPOINTMENTS, label: 'Citas', icon: <CalendarDays size={20} /> },
     { id: ViewState.PRODUCTS, label: 'Productos', icon: <Package size={20} /> },
     { id: ViewState.CLIENTS, label: 'Clientes', icon: <Users size={20} /> },
