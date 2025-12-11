@@ -5,17 +5,19 @@ import AppointmentList from './components/AppointmentList';
 import ProductManager from './components/ProductManager';
 import SellerManager from './components/SellerManager';
 import ClientManager from './components/ClientManager';
+import SalesManager from './components/SalesManager'; // Import SalesManager
 import PublicStore from './components/PublicStore';
 import Login from './components/Login';
 import Logo from './components/Logo';
-import ConfigModal from './components/ConfigModal'; // Import the new modal
-import { ViewState, Appointment, Product, Seller, Client } from './types';
+import ConfigModal from './components/ConfigModal';
+import { ViewState, Appointment, Product, Seller, Client, Sale } from './types';
 import { 
   fetchAppointments, createAppointment, updateAppointmentStatus, deleteAppointment,
   fetchProducts, createProduct, deleteProduct,
   fetchSellers, createSeller, deleteSeller, updateSeller,
   fetchClients, createClient, deleteClient,
-  loginSeller
+  fetchSales, createSale, deleteSale, // Sales CRUD
+  loginSeller, getSession, clearSession // Session Helpers
 } from './services/storageService';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Users, DollarSign, CalendarCheck, CheckCircle, X, Menu } from 'lucide-react';
@@ -26,7 +28,7 @@ const App: React.FC = () => {
   
   // UX State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false); // Config Modal State
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
   // Auth State
   const [currentUser, setCurrentUser] = useState<Seller | null>(null);
@@ -36,6 +38,7 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]); // Sales State
   
   const [aiInsight, setAiInsight] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -44,6 +47,14 @@ const App: React.FC = () => {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportType, setReportType] = useState<'all' | 'pending' | 'completed'>('all');
 
+  // Check Session on Mount
+  useEffect(() => {
+    const sessionUser = getSession();
+    if (sessionUser) {
+        setCurrentUser(sessionUser);
+    }
+  }, []);
+
   // Load Data Effect (Only if logged in)
   useEffect(() => {
     if (!currentUser) return;
@@ -51,17 +62,19 @@ const App: React.FC = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [apptsData, prodsData, sellersData, clientsData] = await Promise.all([
+        const [apptsData, prodsData, sellersData, clientsData, salesData] = await Promise.all([
           fetchAppointments(),
           fetchProducts(),
           fetchSellers(),
-          fetchClients()
+          fetchClients(),
+          fetchSales()
         ]);
 
         setAppointments(apptsData);
         setProducts(prodsData);
         setSellers(sellersData);
         setClients(clientsData);
+        setSales(salesData);
       } catch (error) {
         console.error("Error loading initial data", error);
       } finally {
@@ -91,6 +104,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
+      clearSession(); // Clear storage
       setCurrentUser(null);
       setCurrentView(ViewState.DASHBOARD); 
       setIsSidebarOpen(false);
@@ -99,9 +113,7 @@ const App: React.FC = () => {
   const handleUpdateProfile = async (id: string, updates: Partial<Seller>) => {
       const updatedUser = await updateSeller(id, updates);
       if (updatedUser) {
-          // Update local state
           setCurrentUser(updatedUser);
-          // Also update the seller in the sellers list
           setSellers(prev => prev.map(s => s.id === id ? updatedUser : s));
           alert("Perfil actualizado correctamente.");
       } else {
@@ -166,6 +178,18 @@ const App: React.FC = () => {
   const handleDeleteClient = async (id: string) => {
       setClients(prev => prev.filter(c => c.id !== id));
       await deleteClient(id);
+  };
+
+  const handleAddSale = async (sale: Omit<Sale, 'id'>) => {
+      const newSale = await createSale(sale);
+      if (newSale) {
+          setSales(prev => [...prev, newSale]);
+      }
+  };
+
+  const handleDeleteSale = async (id: string) => {
+      setSales(prev => prev.filter(s => s.id !== id));
+      await deleteSale(id);
   };
 
   // --- View Logic ---
@@ -402,6 +426,18 @@ const App: React.FC = () => {
                 onDelete={handleDeleteClient}
               />
           )}
+
+          {currentView === ViewState.SALES && (
+              <SalesManager
+                sales={sales}
+                products={products}
+                clients={clients}
+                sellers={sellers}
+                currentUser={currentUser}
+                onAddSale={handleAddSale}
+                onDelete={handleDeleteSale}
+              />
+          )}
         </div>
       </main>
 
@@ -510,7 +546,7 @@ const StatCard = ({ title, value, icon, color, onClick, clickable }: any) => {
 
 const SparklesIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z" />
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
     </svg>
 );
 
