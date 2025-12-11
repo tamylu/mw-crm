@@ -1,6 +1,25 @@
 import { Appointment, Product, Seller, Client } from '../types';
 import { supabase } from '../supabaseClient';
 
+// --- AUTH ---
+
+export const loginSeller = async (email: string, password: string): Promise<Seller | null> => {
+  const { data, error } = await supabase
+    .from('sellers')
+    .select('*')
+    .eq('email', email)
+    .eq('password', password) // Note: In production, verify hashed passwords, don't store plain text
+    .eq('active', true)
+    .single();
+
+  if (error || !data) {
+    console.error('Login failed:', error);
+    return null;
+  }
+
+  return data as Seller;
+};
+
 // --- APPOINTMENTS ---
 
 export const fetchAppointments = async (): Promise<Appointment[]> => {
