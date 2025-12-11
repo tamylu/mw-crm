@@ -47,11 +47,14 @@ const [reportModalOpen, setReportModalOpen] = useState(false);
 const [reportType, setReportType] = useState<'all' | 'pending' | 'completed'>('all');
 // Check Session on Mount
 useEffect(() => {
-const sessionUser = getSession();
-if (sessionUser) {
-setCurrentUser(sessionUser);
-}
-setAuthChecked(true);
+  const checkSession = async () => {
+    const sessionUser = await getSession();
+    if (sessionUser) {
+      setCurrentUser(sessionUser);
+    }
+    setAuthChecked(true);
+  };
+  checkSession();
 }, []);
 // Load Data Effect (Only if logged in)
 useEffect(() => {
