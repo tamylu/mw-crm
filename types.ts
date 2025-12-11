@@ -5,6 +5,7 @@ export enum ViewState {
   PRODUCTS = 'PRODUCTS',
   SELLERS = 'SELLERS',
   CLIENTS = 'CLIENTS',
+  SALES = 'SALES',
   PUBLIC_STORE = 'PUBLIC_STORE'
 }
 
@@ -44,6 +45,19 @@ export interface Client {
   email: string;
   phone: string;
   address?: string;
+}
+
+export interface Sale {
+  id: string;
+  productId: string;
+  clientId: string;
+  sellerId: string;
+  date: string; // ISO Date
+  paymentMethod: 'Efectivo' | 'Tarjeta Crédito' | 'Tarjeta Débito' | 'Transferencia' | 'Otro';
+  salePrice: number;
+  extraCosts: number;
+  total: number;
+  notes?: string;
 }
 
 export interface ChartData {
