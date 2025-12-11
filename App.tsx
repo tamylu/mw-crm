@@ -77,7 +77,7 @@ if (!currentUser) return;
   }
 };
 loadData();
- }, [currentUser]);
+}, [currentUser]);
 // AI Insights
 useEffect(() => {
 if (appointments.length > 0) {
@@ -218,7 +218,7 @@ userName={currentUser.name}
 isOpen={isSidebarOpen}
 onClose={() => setIsSidebarOpen(false)}
 />
-  <main className="flex-1 overflow-y-auto h-screen w-full relative">
+<main className="flex-1 overflow-y-auto h-screen w-full relative">
     <div className="md:hidden bg-white border-b border-slate-200 p-4 sticky top-0 z-30 flex items-center justify-between shadow-sm">
         <div className="w-32"><Logo className="w-full h-auto text-slate-900" /></div>
         <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
@@ -342,13 +342,13 @@ onClose={() => setIsSidebarOpen(false)}
     </div>
   )}
 </div>
-  );
+);
 };
 // --- PUBLIC STORE ROUTE ---
 const PublicStoreRoute: React.FC = () => {
 const navigate = useNavigate();
 const [products, setProducts] = useState<Product[]>([]);
-  useEffect(() => {
+ useEffect(() => {
     fetchProducts().then(setProducts);
 }, []);
 
