@@ -182,6 +182,21 @@ export const createSeller = async (seller: Omit<Seller, 'id'>): Promise<Seller |
   return data as Seller;
 };
 
+export const updateSeller = async (id: string, updates: Partial<Seller>): Promise<Seller | null> => {
+  const { data, error } = await supabase
+    .from('sellers')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating seller:', error);
+    return null;
+  }
+  return data as Seller;
+};
+
 export const deleteSeller = async (id: string) => {
   const { error } = await supabase.from('sellers').delete().eq('id', id);
   if (error) console.error('Error deleting seller:', error);
