@@ -8,11 +8,12 @@ import ClientManager from './components/ClientManager';
 import PublicStore from './components/PublicStore';
 import Login from './components/Login';
 import Logo from './components/Logo';
+import ConfigModal from './components/ConfigModal'; // Import the new modal
 import { ViewState, Appointment, Product, Seller, Client } from './types';
 import { 
   fetchAppointments, createAppointment, updateAppointmentStatus, deleteAppointment,
   fetchProducts, createProduct, deleteProduct,
-  fetchSellers, createSeller, deleteSeller,
+  fetchSellers, createSeller, deleteSeller, updateSeller,
   fetchClients, createClient, deleteClient,
   loginSeller
 } from './services/storageService';
@@ -25,6 +26,7 @@ const App: React.FC = () => {
   
   // UX State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false); // Config Modal State
 
   // Auth State
   const [currentUser, setCurrentUser] = useState<Seller | null>(null);
@@ -92,6 +94,19 @@ const App: React.FC = () => {
       setCurrentUser(null);
       setCurrentView(ViewState.DASHBOARD); 
       setIsSidebarOpen(false);
+  };
+
+  const handleUpdateProfile = async (id: string, updates: Partial<Seller>) => {
+      const updatedUser = await updateSeller(id, updates);
+      if (updatedUser) {
+          // Update local state
+          setCurrentUser(updatedUser);
+          // Also update the seller in the sellers list
+          setSellers(prev => prev.map(s => s.id === id ? updatedUser : s));
+          alert("Perfil actualizado correctamente.");
+      } else {
+          throw new Error("Failed to update");
+      }
   };
 
   // --- Handlers (Async Wrappers) ---
@@ -235,6 +250,7 @@ const App: React.FC = () => {
         currentView={currentView} 
         onChangeView={setCurrentView} 
         onLogout={handleLogout}
+        onConfig={() => setIsConfigModalOpen(true)}
         userName={currentUser.name}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -389,6 +405,15 @@ const App: React.FC = () => {
         </div>
       </main>
 
+      {/* Config Modal */}
+      {isConfigModalOpen && currentUser && (
+          <ConfigModal 
+            user={currentUser}
+            onClose={() => setIsConfigModalOpen(false)}
+            onSave={handleUpdateProfile}
+          />
+      )}
+
       {/* Report Modal */}
       {reportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -485,7 +510,7 @@ const StatCard = ({ title, value, icon, color, onClick, clickable }: any) => {
 
 const SparklesIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z" />
     </svg>
 );
 
