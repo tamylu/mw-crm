@@ -105,7 +105,13 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
 
       {/* Hero Section */}
       <div className="bg-slate-950 text-white py-12 md:py-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center opacity-20"></div>
+        import portada from '../assets/portada.png';
+
+<div
+  className="absolute inset-0 bg-cover bg-center opacity-20"
+  style={{ backgroundImage: `url(${portada})` }}
+></div>
+
         <div className="max-w-7xl mx-auto relative z-10 text-center">
           <h1 className="text-3xl md:text-6xl font-bold mb-4 md:mb-6 tracking-tight">
            Somos tu aliado estratégico, <br />
