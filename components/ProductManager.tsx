@@ -89,14 +89,14 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onAddProduct,
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Galería de Productos</h2>
           <p className="text-slate-500">Gestiona el inventario y las imágenes de productos</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-lime-600 hover:bg-lime-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-md"
+          className="w-full md:w-auto bg-lime-600 hover:bg-lime-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-md"
         >
           <Plus size={18} />
           Agregar Producto
@@ -127,7 +127,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onAddProduct,
                 </div>
                 <p className="text-xs text-slate-500 mb-3 uppercase tracking-wider font-semibold">{prod.category}</p>
                 <p className="text-sm text-slate-600 line-clamp-2 mb-4 h-10">{prod.description}</p>
-                <div className="flex gap-2 overflow-x-auto pb-2">
+                <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                     {prod.images.slice(1).map((img, i) => (
                         <img key={i} src={img} className="w-10 h-10 rounded object-cover border border-slate-100 shrink-0" alt="" />
                     ))}
@@ -146,11 +146,11 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onAddProduct,
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center">
               <h3 className="text-xl font-bold text-slate-800">Agregar Nuevo Producto</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24}/></button>
             </div>
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
