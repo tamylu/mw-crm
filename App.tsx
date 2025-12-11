@@ -54,7 +54,6 @@ setAuthChecked(true);
 // Load Data Effect (Only if logged in)
 useEffect(() => {
 if (!currentUser) return;
-
   const loadData = async () => {
   setLoading(true);
   try {
@@ -78,9 +77,8 @@ if (!currentUser) return;
   }
 };
 loadData();
-  }, [currentUser]);
-
-  // AI Insights
+ }, [currentUser]);
+// AI Insights
 useEffect(() => {
 if (appointments.length > 0) {
 analyzeSchedule(appointments).then(setAiInsight);
@@ -158,7 +156,14 @@ setSales(prev => prev.filter(s => s.id !== id));
 await deleteSale(id);
 };
 // --- RENDER LOGIC ---
-if (!authChecked) return null; // Wait for session check
+if (!authChecked) {
+// Loading state while checking session
+return (
+<div className="min-h-screen flex items-center justify-center bg-slate-50">
+<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lime-600"></div>
+</div>
+);
+}
 if (!currentUser) {
 return (
 <Login
