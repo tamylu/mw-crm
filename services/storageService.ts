@@ -43,8 +43,14 @@ export const loginSeller = async (email: string, password: string): Promise<Sell
     password,
   });
 
-  if (authError || !authData.user) {
+  if (authError) {
     console.error('Login failed:', authError);
+    if (authError.message.includes('Failed to fetch')) {
+      throw new Error('network error');
+    }
+    return null;
+  }
+  if (!authData.user) {
     return null;
   }
 
