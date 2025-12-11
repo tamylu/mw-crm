@@ -1,5 +1,3 @@
-
-import React, { useState } from 'react';
 import Logo from './Logo';
 import { LogIn, ArrowRight } from 'lucide-react';
 
@@ -18,7 +16,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onGoToStore }) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
     try {
       const success = await onLogin(email, password);
       if (!success) {
@@ -26,6 +24,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, onGoToStore }) => {
       }
     } catch (err) {
       setError('Ocurrió un error al intentar ingresar.');
+    } catch (err: any) {
+      if (err.message.includes('network error')) {
+        setError('Error de conexión. Por favor, revisa tu conexión a internet.');
+      } else {
+        setError('Ocurrió un error al intentar ingresar.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -39,7 +43,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onGoToStore }) => {
                 <Logo />
             </div>
         </div>
-        
+
         <div className="p-8 pt-6">
           <h2 className="text-2xl font-bold text-center text-slate-800 mb-2">Acceso Administrativo</h2>
           <p className="text-center text-slate-500 mb-8">Ingresa tus credenciales para continuar</p>
@@ -56,7 +60,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onGoToStore }) => {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
               <input
