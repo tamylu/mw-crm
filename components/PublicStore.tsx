@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Product, Client } from '../types';
-import { ShoppingBag, ArrowLeft, MessageCircle, Search, Star, X, Send, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, MessageCircle, Search, Star, X, Send, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import Logo from './Logo';
 
 interface PublicStoreProps {
@@ -22,7 +22,6 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
   const [isCarouselOpen, setIsCarouselOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   
-  // Filter products that actually have images for the carousel
   const carouselProducts = products.filter(p => p.images && p.images.length > 0);
 
   const handleConsultClick = (product: Product) => {
@@ -47,7 +46,6 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
     handleCloseModal();
   };
 
-  // Carousel Navigation
   const nextSlide = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     setCurrentSlide((prev) => (prev === carouselProducts.length - 1 ? 0 : prev + 1));
@@ -67,7 +65,6 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
     }
   };
 
-  // Keyboard navigation for carousel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
         if (!isCarouselOpen) return;
@@ -82,19 +79,22 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 md:h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-             <Logo className="h-14 w-auto" />
+             <div className="w-32 md:w-40">
+                <Logo className="w-full h-auto" />
+             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <button 
               onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-lime-600 hover:bg-lime-50 rounded-full transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-medium text-slate-600 hover:text-lime-600 hover:bg-lime-50 rounded-full transition-colors"
             >
-              <ArrowLeft size={18} />
-              Volver al Panel
+              <ArrowLeft size={16} className="md:w-[18px]" />
+              <span className="hidden md:inline">Volver al Panel</span>
+              <span className="md:hidden">Panel</span>
             </button>
             <button className="p-2 text-slate-400 hover:text-slate-600">
               <Search size={20} />
@@ -104,19 +104,19 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
       </header>
 
       {/* Hero Section */}
-      <div className="bg-slate-950 text-white py-20 px-4 relative overflow-hidden">
+      <div className="bg-slate-950 text-white py-12 md:py-20 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center opacity-20"></div>
         <div className="max-w-7xl mx-auto relative z-10 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
+          <h1 className="text-3xl md:text-6xl font-bold mb-4 md:mb-6 tracking-tight">
             Calidad Premium <br />
             <span className="text-lime-400">Directo a ti</span>
           </h1>
-          <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-slate-300 mb-6 md:mb-8 max-w-2xl mx-auto px-4">
             Explora nuestra colección exclusiva de productos seleccionados cuidadosamente para mejorar tu estilo de vida.
           </p>
           <button 
             onClick={openCarousel}
-            className="px-8 py-3 bg-lime-600 text-white rounded-full font-semibold hover:bg-lime-500 transition-colors shadow-lg shadow-lime-900/50"
+            className="px-6 py-2.5 md:px-8 md:py-3 bg-lime-600 text-white rounded-full font-semibold hover:bg-lime-500 transition-colors shadow-lg shadow-lime-900/50 text-sm md:text-base"
           >
             Ver Catálogo
           </button>
@@ -124,13 +124,13 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
       </div>
 
       {/* Product Grid */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center justify-between mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-2">
             <h2 className="text-2xl font-bold text-slate-900">Productos Destacados</h2>
             <div className="text-sm text-slate-500">{products.length} Productos Disponibles</div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
           {products.map((product) => (
             <div key={product.id} className="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full">
               <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
@@ -150,7 +150,7 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
                 </div>
               </div>
               
-              <div className="p-5 flex flex-col flex-1">
+              <div className="p-4 md:p-5 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold text-lg text-slate-900 line-clamp-1 group-hover:text-lime-600 transition-colors">
                     {product.name}
@@ -171,7 +171,7 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
                   </span>
                   <button 
                     onClick={() => handleConsultClick(product)}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-950 text-white rounded-lg text-sm font-medium hover:bg-lime-600 hover:text-white transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-slate-950 text-white rounded-lg text-sm font-medium hover:bg-lime-600 hover:text-white transition-colors"
                   >
                     <MessageCircle size={16} />
                     Consultar
@@ -203,7 +203,7 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
       {/* Contact Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <div>
                   <h3 className="text-xl font-bold text-slate-800">Solicitar Información</h3>
@@ -211,7 +211,7 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
               </div>
               <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600"><X size={24}/></button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
                 <p className="text-sm text-slate-500">Déjanos tus datos y nos pondremos en contacto contigo para coordinar la compra.</p>
               
               <div>
