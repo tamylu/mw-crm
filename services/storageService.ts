@@ -44,7 +44,14 @@ export const loginSeller = async (email: string, password: string): Promise<Sell
   });
 
   if (authError || !authData.user) {
+  if (authError) {
     console.error('Login failed:', authError);
+    if (authError.message.includes('Failed to fetch')) {
+      throw new Error('network error');
+    }
+    return null;
+  }
+  if (!authData.user) {
     return null;
   }
 
@@ -76,7 +83,7 @@ export const fetchSales = async (): Promise<Sale[]> => {
     console.error('Error fetching sales:', error);
     return [];
   }
-  
+
   return data.map((item: any) => ({
     id: item.id,
     productId: item.product_id,
@@ -138,7 +145,7 @@ export const fetchAppointments = async (): Promise<Appointment[]> => {
   const { data, error } = await supabase
     .from('appointments')
     .select('*');
-  
+
   if (error) {
     console.error('Error fetching appointments:', error);
     return [];
@@ -194,7 +201,7 @@ export const updateAppointmentStatus = async (id: string, status: Appointment['s
     .from('appointments')
     .update({ status })
     .eq('id', id);
-    
+
   if (error) console.error('Error updating appointment:', error);
 };
 
