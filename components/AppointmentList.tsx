@@ -1,250 +1,251 @@
 
-import React, { useState, useRef } from 'react';
-import { Product } from '../types';
-import { Plus, Sparkles, Image as ImageIcon, Trash2, X, Loader2 } from 'lucide-react';
-import { fileToBase64 } from '../services/storageService';
-import { generateProductDescription } from '../services/geminiService';
+import React, { useState } from 'react';
+import { Appointment, Seller, Client } from '../types';
+import { Plus, Clock, Calendar, User, Trash2, CheckCircle, Briefcase, Ban, X } from 'lucide-react';
 
-interface ProductManagerProps {
-  products: Product[];
-  onAddProduct: (prod: Omit<Product, 'id'>) => void;
+interface AppointmentListProps {
+  appointments: Appointment[];
+  sellers: Seller[];
+  clients: Client[];
+  onAddAppointment: (appt: Omit<Appointment, 'id'>) => void;
+  onStatusChange: (id: string, status: Appointment['status']) => void;
   onDelete: (id: string) => void;
 }
 
-const ProductManager: React.FC<ProductManagerProps> = ({ products, onAddProduct, onDelete }) => {
+const AppointmentList: React.FC<AppointmentListProps> = ({ appointments, sellers, clients, onAddAppointment, onStatusChange, onDelete }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [newProduct, setNewProduct] = useState<{
-    name: string;
-    price: number;
-    category: string;
-    description: string;
-    images: string[];
-  }>({
-    name: '',
-    price: 0,
-    category: 'General',
-    description: '',
-    images: []
+  const [newAppt, setNewAppt] = useState({
+    clientName: '',
+    date: new Date().toISOString().split('T')[0],
+    time: '09:00',
+    service: 'Consulta',
+    notes: '',
+    sellerId: ''
   });
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-        setIsUploading(true);
-        try {
-            const filePromises = Array.from(e.target.files).map(file => fileToBase64(file));
-            const base64Images = await Promise.all(filePromises);
-            setNewProduct(prev => ({ ...prev, images: [...prev.images, ...base64Images] }));
-        } catch (error) {
-            console.error("Error uploading files", error);
-            alert("Hubo un error al procesar las imágenes.");
-        } finally {
-            setIsUploading(false);
-            // Reset input so the same file can be selected again if needed
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        }
-    }
-  };
-
-  const handleGenerateDescription = async () => {
-    if (!newProduct.name) return;
-    setIsGenerating(true);
-    try {
-        const desc = await generateProductDescription(newProduct.name, newProduct.category, newProduct.description);
-        setNewProduct(prev => ({ ...prev, description: desc }));
-    } catch (error) {
-        alert("Error al generar descripción con IA. Verifique la API Key.");
-    } finally {
-        setIsGenerating(false);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-        // Basic validation logic could go here if needed, but HTML5 'required' handles most
-        onAddProduct({ ...newProduct, stock: 10 });
-        
-        // Reset and close only if successful
-        setNewProduct({ name: '', price: 0, category: 'General', description: '', images: [] });
-        setIsModalOpen(false);
-    } catch (error) {
-        console.error("Error saving product:", error);
-        alert("No se pudo guardar el producto. Es posible que las imágenes ocupen demasiado espacio. Intenta con menos imágenes o borra productos antiguos.");
-    }
+    onAddAppointment({
+      ...newAppt,
+      status: 'pending'
+    });
+    setIsModalOpen(false);
+    setNewAppt({
+        clientName: '',
+        date: new Date().toISOString().split('T')[0],
+        time: '09:00',
+        service: 'Consulta',
+        notes: '',
+        sellerId: ''
+    });
   };
 
-  const removeImage = (index: number) => {
-      setNewProduct(prev => ({
-          ...prev,
-          images: prev.images.filter((_, i) => i !== index)
-      }));
-  }
+  const translateStatus = (status: string) => {
+      switch(status) {
+          case 'completed': return 'Completada';
+          case 'cancelled': return 'Cancelada';
+          case 'pending': return 'Pendiente';
+          default: return status;
+      }
+  };
+
+  const getSellerName = (id?: string) => {
+      if (!id) return null;
+      const seller = sellers.find(s => s.id === id);
+      return seller ? seller.name : null;
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Galería de Productos</h2>
-          <p className="text-slate-500">Gestiona el inventario y las imágenes de productos</p>
+          <h2 className="text-2xl font-bold text-slate-800">Gestión de Citas</h2>
+          <p className="text-slate-500 text-sm">Administra tu agenda y reuniones</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
           className="w-full md:w-auto bg-lime-600 hover:bg-lime-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-md"
         >
           <Plus size={18} />
-          Agregar Producto
+          Nueva Cita
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {products.map((prod) => (
-          <div key={prod.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group">
-            <div className="relative h-48 bg-slate-100 overflow-hidden">
-              {prod.images.length > 0 ? (
-                <img src={prod.images[0]} alt={prod.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-300">
-                  <ImageIcon size={48} />
-                </div>
-              )}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => onDelete(prod.id)} className="bg-white/90 p-2 rounded-full text-red-500 hover:text-red-600 shadow-sm">
-                    <Trash2 size={16} />
-                </button>
-              </div>
+      <div className="grid gap-4">
+        {appointments.length === 0 ? (
+            <div className="p-8 md:p-12 text-center bg-white rounded-xl border border-dashed border-slate-300">
+                <p className="text-slate-500">No hay citas programadas todavía.</p>
             </div>
-            <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-slate-800 line-clamp-1" title={prod.name}>{prod.name}</h3>
-                    <span className="font-bold text-lime-600">${prod.price}</span>
+        ) : (
+            appointments.map((appt) => (
+            <div key={appt.id} className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-lime-300 transition-colors">
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className={`p-3 rounded-full shrink-0 ${
+                      appt.status === 'completed' ? 'bg-green-100 text-green-600' :
+                      appt.status === 'cancelled' ? 'bg-red-100 text-red-600' :
+                      'bg-lime-50 text-lime-600'
+                  }`}>
+                      {appt.status === 'cancelled' ? <Ban size={24} /> : <User size={24} />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-lg text-slate-800 truncate">{appt.clientName}</h3>
+                      <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm text-slate-500 mt-1">
+                        <span className="flex items-center gap-1"><Calendar size={14} /> {appt.date}</span>
+                        <span className="flex items-center gap-1"><Clock size={14} /> {appt.time}</span>
+                        <span className={`px-2 py-0.5 rounded text-xs uppercase tracking-wide font-medium border ${
+                            appt.status === 'completed' ? 'bg-green-50 border-green-100 text-green-600' :
+                            appt.status === 'cancelled' ? 'bg-red-50 border-red-100 text-red-600' :
+                            'bg-slate-100 border-slate-200 text-slate-600'
+                        }`}>
+                            {translateStatus(appt.status)}
+                        </span>
+                        <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-600 text-xs uppercase tracking-wide font-medium truncate">{appt.service}</span>
+                      </div>
+                      {getSellerName(appt.sellerId) && (
+                          <div className="flex items-center gap-1 text-xs text-lime-700 mt-1 font-medium">
+                              <Briefcase size={12} />
+                              <span className="truncate">Vendedor: {getSellerName(appt.sellerId)}</span>
+                          </div>
+                      )}
+                      {appt.notes && <p className="text-xs text-slate-400 mt-2 italic line-clamp-2">"{appt.notes}"</p>}
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 mb-3 uppercase tracking-wider font-semibold">{prod.category}</p>
-                <p className="text-sm text-slate-600 line-clamp-2 mb-4 h-10">{prod.description}</p>
-                <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                    {prod.images.slice(1).map((img, i) => (
-                        <img key={i} src={img} className="w-10 h-10 rounded object-cover border border-slate-100 shrink-0" alt="" />
-                    ))}
+
+                <div className="flex items-center gap-2 justify-end md:justify-start border-t border-slate-100 pt-3 md:border-t-0 md:pt-0">
+                  {appt.status !== 'completed' && appt.status !== 'cancelled' && (
+                      <>
+                          <button
+                              onClick={() => onStatusChange(appt.id, 'completed')}
+                              className="flex-1 md:flex-none flex items-center justify-center text-green-600 bg-green-50 md:bg-transparent hover:bg-green-50 p-2 rounded-lg transition-colors border border-green-100 md:border-transparent"
+                              title="Marcar como Completada"
+                          >
+                              <CheckCircle size={20} className="md:hidden mr-1" />
+                              <span className="md:hidden text-sm font-medium">Completar</span>
+                              <CheckCircle size={20} className="hidden md:block" />
+                          </button>
+                          <button
+                              onClick={() => onStatusChange(appt.id, 'cancelled')}
+                              className="flex-1 md:flex-none flex items-center justify-center text-red-500 bg-red-50 md:bg-transparent hover:bg-red-50 p-2 rounded-lg transition-colors border border-red-100 md:border-transparent"
+                              title="Cancelar Cita"
+                          >
+                              <Ban size={20} className="md:hidden mr-1" />
+                              <span className="md:hidden text-sm font-medium">Cancelar</span>
+                              <Ban size={20} className="hidden md:block" />
+                          </button>
+                      </>
+                  )}
+                  <button
+                      onClick={() => onDelete(appt.id)}
+                      className="flex-none text-slate-400 hover:bg-slate-100 hover:text-slate-600 p-2 rounded-lg transition-colors"
+                      title="Eliminar del sistema"
+                  >
+                      <Trash2 size={20} />
+                  </button>
                 </div>
             </div>
-          </div>
-        ))}
-        {products.length === 0 && (
-            <div className="col-span-full p-12 text-center bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">
-                No hay productos en la galería.
-            </div>
+            ))
         )}
       </div>
 
-      {/* Add Product Modal */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
-            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-slate-800">Agregar Nuevo Producto</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24}/></button>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-slate-800">Nueva Cita</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Nombre del Producto</label>
-                        <input required autoFocus type="text" className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none bg-white text-slate-900"
-                            value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Precio ($)</label>
-                            <input required type="number" min="0" step="0.01" className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none bg-white text-slate-900"
-                                value={newProduct.price || ''} onChange={(e) => setNewProduct({...newProduct, price: parseFloat(e.target.value)})}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Categoría</label>
-                            <select className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none bg-white text-slate-900"
-                                value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
-                            >
-                                <option>General</option>
-                                <option>Electrónica</option>
-                                <option>Servicios</option>
-                                <option>Belleza</option>
-                                <option>Hogar</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <div className="flex justify-between items-center mb-1">
-                            <label className="block text-sm font-medium text-slate-700">Descripción</label>
-                            <button
-                                type="button"
-                                onClick={handleGenerateDescription}
-                                disabled={isGenerating || !newProduct.name}
-                                className="text-xs flex items-center gap-1 text-lime-600 hover:text-lime-800 disabled:opacity-50"
-                            >
-                                <Sparkles size={12} />
-                                {isGenerating ? 'Pensando...' : 'Generar con IA'}
-                            </button>
-                        </div>
-                        <textarea
-                            className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none h-32 resize-none text-sm bg-white text-slate-900"
-                            value={newProduct.description}
-                            onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
-                            placeholder="Ingrese detalles o use IA para generar..."
-                        ></textarea>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                     <label className="block text-sm font-medium text-slate-700">Imágenes del Producto</label>
-                     <div className="grid grid-cols-2 gap-2">
-                        {newProduct.images.map((img, idx) => (
-                            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group">
-                                <img src={img} alt="" className="w-full h-full object-cover" />
-                                <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <X size={12} />
-                                </button>
-                            </div>
-                        ))}
-                        <label className={`aspect-square rounded-lg border-2 border-dashed border-slate-300 hover:border-lime-500 hover:bg-lime-50 transition-colors flex flex-col items-center justify-center cursor-pointer ${isUploading ? 'opacity-50 cursor-wait' : ''}`}>
-                            {isUploading ? (
-                                <Loader2 className="text-lime-500 animate-spin mb-2" />
-                            ) : (
-                                <ImageIcon className="text-slate-400 mb-2" />
-                            )}
-                            <span className="text-xs text-slate-500 text-center">
-                                {isUploading ? 'Subiendo...' : <>Seleccionar<br/>Imágenes</>}
-                            </span>
-                            <input 
-                                ref={fileInputRef}
-                                type="file" 
-                                accept="image/png, image/jpeg, image/webp" 
-                                multiple 
-                                className="hidden" 
-                                onChange={handleImageUpload}
-                                disabled={isUploading}
-                            />
-                        </label>
-                     </div>
-                     <p className="text-xs text-slate-400">Soporta múltiples imágenes (JPG, PNG, WEBP).</p>
-                  </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nombre del Cliente</label>
+                <input
+                  required
+                  list="clients-list"
+                  type="text"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none bg-white text-slate-900"
+                  value={newAppt.clientName}
+                  onChange={(e) => setNewAppt({...newAppt, clientName: e.target.value})}
+                  placeholder="Escribe o selecciona..."
+                />
+                <datalist id="clients-list">
+                    {clients.map(client => (
+                        <option key={client.id} value={client.name} />
+                    ))}
+                </datalist>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Fecha</label>
+                    <input
+                    required
+                    type="date"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none bg-white text-slate-900"
+                    value={newAppt.date}
+                    onChange={(e) => setNewAppt({...newAppt, date: e.target.value})}
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Hora</label>
+                    <input
+                    required
+                    type="time"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none bg-white text-slate-900"
+                    value={newAppt.time}
+                    onChange={(e) => setNewAppt({...newAppt, time: e.target.value})}
+                    />
+                </div>
               </div>
               
-              <div className="pt-4 flex gap-3 border-t border-slate-100">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">Cancelar</button>
-                <button 
-                    type="submit" 
-                    disabled={isUploading || isGenerating}
-                    className="flex-1 px-4 py-2 bg-lime-600 text-white rounded-lg hover:bg-lime-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Vendedor Asignado</label>
+                <select
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none bg-white text-slate-900"
+                    value={newAppt.sellerId}
+                    onChange={(e) => setNewAppt({...newAppt, sellerId: e.target.value})}
                 >
-                    {isUploading ? 'Procesando...' : 'Guardar Producto'}
+                    <option value="" className="text-slate-500">-- Seleccionar Vendedor --</option>
+                    {sellers.filter(s => s.active).map(seller => (
+                        <option key={seller.id} value={seller.id} className="text-slate-900">
+                            {seller.name}
+                        </option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Servicio</label>
+                <select
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none bg-white text-slate-900"
+                    value={newAppt.service}
+                    onChange={(e) => setNewAppt({...newAppt, service: e.target.value})}
+                >
+                    <option className="text-slate-900">Consulta</option>
+                    <option className="text-slate-900">Servicio Estándar</option>
+                    <option className="text-slate-900">Paquete Premium</option>
+                    <option className="text-slate-900">Seguimiento</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Notas</label>
+                <textarea
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-lime-500 outline-none h-24 resize-none bg-white text-slate-900"
+                  value={newAppt.notes}
+                  onChange={(e) => setNewAppt({...newAppt, notes: e.target.value})}
+                ></textarea>
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-lime-600 text-white rounded-lg hover:bg-lime-700 font-medium shadow-md shadow-lime-200"
+                >
+                    Guardar
                 </button>
               </div>
             </form>
@@ -255,4 +256,4 @@ const ProductManager: React.FC<ProductManagerProps> = ({ products, onAddProduct,
   );
 };
 
-export default ProductManager;
+export default AppointmentList;
