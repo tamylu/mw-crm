@@ -93,8 +93,8 @@ const PublicStore: React.FC<PublicStoreProps> = ({ products, onBack, onAddClient
               className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-medium text-slate-600 hover:text-lime-600 hover:bg-lime-50 rounded-full transition-colors"
             >
               <ArrowLeft size={16} className="md:w-[18px]" />
-              <span className="hidden md:inline">Volver al Panel</span>
-              <span className="md:hidden">Panel</span>
+              <span className="hidden md:inline">Ingreso Administrativo</span>
+              <span className="md:hidden">Administración</span>
             </button>
             <button className="p-2 text-slate-400 hover:text-slate-600">
               <Search size={20} />
