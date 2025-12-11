@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { Product } from '../types';
 import { Plus, Sparkles, Image as ImageIcon, Trash2, X, Loader2 } from 'lucide-react';
-import { fileToBase64 } from '../services/storageService';
+import { fileToBase64 } from '../services/utils';
 import { generateProductDescription } from '../services/geminiService';
 
 interface ProductManagerProps {
