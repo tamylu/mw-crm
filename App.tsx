@@ -10,6 +10,8 @@ import PublicStore from './components/PublicStore';
 import Login from './components/Login';
 import Logo from './components/Logo';
 import ConfigModal from './components/ConfigModal';
+import StatCard from './components/StatCard';
+import SparklesIcon from './components/SparklesIcon';
 import { ViewState, Appointment, Product, Seller, Client, Sale } from './types';
 import {
 fetchAppointments, createAppointment, updateAppointmentStatus, deleteAppointment,
@@ -369,23 +371,4 @@ return (
 </BrowserRouter>
 );
 };
-// --- HELPERS ---
-const StatCard = ({ title, value, icon, color, onClick, clickable }: any) => (
-<div
-onClick={clickable ? onClick : undefined}
-className={bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 transition-all ${clickable ? 'cursor-pointer hover:shadow-md hover:scale-[1.02]' : ''}}
->
-<div className={p-4 rounded-full ${color} shrink-0}>{icon}</div>
-<div className="min-w-0">
-<p className="text-slate-500 text-sm font-medium truncate">{title}</p>
-<p className="text-2xl font-bold text-slate-800">{value}</p>
-{clickable && <p className="text-xs text-lime-600 mt-1 font-medium">Ver detalle →</p>}
-</div>
-</div>
-);
-const SparklesIcon = () => (
-<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-</svg>
-);
 export default App;
