@@ -1,5 +1,39 @@
-import { Appointment, Product, Seller, Client } from '../types';
+import { Appointment, Product, Seller, Client, Sale } from '../types';
 import { supabase } from '../supabaseClient';
+
+// --- SESSION MANAGEMENT ---
+
+const SESSION_KEY = 'mw_session';
+const SESSION_DURATION = 2 * 60 * 60 * 1000; // 2 Hours in milliseconds
+
+export const saveSession = (user: Seller) => {
+  const sessionData = {
+    user,
+    expiry: Date.now() + SESSION_DURATION
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+};
+
+export const getSession = (): Seller | null => {
+  const sessionStr = localStorage.getItem(SESSION_KEY);
+  if (!sessionStr) return null;
+
+  try {
+    const session = JSON.parse(sessionStr);
+    if (Date.now() > session.expiry) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return session.user;
+  } catch (e) {
+    localStorage.removeItem(SESSION_KEY);
+    return null;
+  }
+};
+
+export const clearSession = () => {
+  localStorage.removeItem(SESSION_KEY);
+};
 
 // --- AUTH ---
 
@@ -8,7 +42,7 @@ export const loginSeller = async (email: string, password: string): Promise<Sell
     .from('sellers')
     .select('*')
     .eq('email', email)
-    .eq('password', password) // Note: In production, verify hashed passwords, don't store plain text
+    .eq('password', password) // Note: In production, verify hashed passwords
     .eq('active', true)
     .single();
 
@@ -17,7 +51,73 @@ export const loginSeller = async (email: string, password: string): Promise<Sell
     return null;
   }
 
-  return data as Seller;
+  const user = data as Seller;
+  saveSession(user); // Auto-save session on login
+  return user;
+};
+
+// --- SALES ---
+
+export const fetchSales = async (): Promise<Sale[]> => {
+  const { data, error } = await supabase.from('sales').select('*');
+  if (error) {
+    console.error('Error fetching sales:', error);
+    return [];
+  }
+  
+  return data.map((item: any) => ({
+    id: item.id,
+    productId: item.product_id,
+    clientId: item.client_id,
+    sellerId: item.seller_id,
+    date: item.date,
+    paymentMethod: item.payment_method,
+    salePrice: item.sale_price,
+    extraCosts: item.extra_costs,
+    total: item.total,
+    notes: item.notes
+  }));
+};
+
+export const createSale = async (sale: Omit<Sale, 'id'>): Promise<Sale | null> => {
+  const { data, error } = await supabase
+    .from('sales')
+    .insert([{
+      product_id: sale.productId,
+      client_id: sale.clientId,
+      seller_id: sale.sellerId,
+      date: sale.date,
+      payment_method: sale.paymentMethod,
+      sale_price: sale.salePrice,
+      extra_costs: sale.extraCosts,
+      total: sale.total,
+      notes: sale.notes
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating sale:', error);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    productId: data.product_id,
+    clientId: data.client_id,
+    sellerId: data.seller_id,
+    date: data.date,
+    paymentMethod: data.payment_method,
+    salePrice: data.sale_price,
+    extraCosts: data.extra_costs,
+    total: data.total,
+    notes: data.notes
+  };
+};
+
+export const deleteSale = async (id: string) => {
+  const { error } = await supabase.from('sales').delete().eq('id', id);
+  if (error) console.error('Error deleting sale:', error);
 };
 
 // --- APPOINTMENTS ---
