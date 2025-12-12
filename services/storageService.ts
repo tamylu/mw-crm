@@ -38,22 +38,34 @@ export const clearSession = () => {
 // --- AUTH ---
 
 export const loginSeller = async (email: string, password: string): Promise<LoginResult> => {
+  // Normalizamos email
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Buscar vendedor activo con email + password
   const { data, error } = await supabase
     .from('sellers')
     .select('*')
-    .eq('email', email)
-    .eq('password', password)  // 👈 antes usabas esto
+    .eq('email', normalizedEmail)
+    .eq('password', password)
     .eq('active', true)
     .single();
 
+  // Si no encuentra o hay error → credenciales inválidas
   if (error || !data) {
+    console.error('Login error:', error);
     return { success: false, message: 'Credenciales inválidas o usuario inactivo.' };
   }
 
-  saveSession(data);
+  // Guardar sesión local
+  saveSession(data as Seller);
 
-  return { success: true, user: data, message: 'Inicio de sesión exitoso.' };
+  return {
+    success: true,
+    user: data as Seller,
+    message: 'Inicio de sesión exitoso.',
+  };
 };
+
 
 
 // --- SALES ---
