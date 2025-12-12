@@ -284,7 +284,6 @@ export const deleteProduct = async (id: string) => {
 };
 
 // --- SELLERS ---
-
 export const createSeller = async (seller: {
   email: string;
   password: string;
@@ -292,7 +291,7 @@ export const createSeller = async (seller: {
   active: boolean;
 }): Promise<Seller | null> => {
 
-  // 1. Crear usuario en Auth
+  // 1. Crear usuario en Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email: seller.email.toLowerCase().trim(),
     password: seller.password,
@@ -306,11 +305,11 @@ export const createSeller = async (seller: {
 
   const authUser = authData.user;
 
-  // 2. Insertar el vendedor usando el ID de auth.users
+  // 2. Insertar registro en sellers con el ID de Auth
   const { data, error } = await supabase
     .from('sellers')
     .insert([{
-      id: authUser.id,      // UUID que conecta ambas tablas
+      id: authUser.id,
       email: seller.email,
       name: seller.name || null,
       active: seller.active,
@@ -325,6 +324,7 @@ export const createSeller = async (seller: {
 
   return data as Seller;
 };
+
 
 
 // --- CLIENTS ---
