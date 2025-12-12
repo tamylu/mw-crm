@@ -285,48 +285,47 @@ export const deleteProduct = async (id: string) => {
 
 // --- SELLERS ---
 
-export const fetchSellers = async (): Promise<Seller[]> => {
-  const { data, error } = await supabase.from('sellers').select('*');
-  if (error) {
-    console.error('Error fetching sellers:', error);
-    return [];
-  }
-  return data as Seller[]; // Column names match assuming simple table
-};
+export const createSeller = async (seller: {
+  email: string;
+  password: string;
+  name?: string;
+  active: boolean;
+}): Promise<Seller | null> => {
 
-export const createSeller = async (seller: Omit<Seller, 'id'>): Promise<Seller | null> => {
+  // 1. Crear usuario en Auth
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email: seller.email.toLowerCase().trim(),
+    password: seller.password,
+    email_confirm: true,
+  });
+
+  if (authError) {
+    console.error('Error creating Supabase Auth user:', authError);
+    return null;
+  }
+
+  const authUser = authData.user;
+
+  // 2. Insertar el vendedor usando el ID de auth.users
   const { data, error } = await supabase
     .from('sellers')
-    .insert([seller])
+    .insert([{
+      id: authUser.id,      // UUID que conecta ambas tablas
+      email: seller.email,
+      name: seller.name || null,
+      active: seller.active,
+    }])
     .select()
     .single();
 
   if (error) {
-    console.error('Error creating seller:', error);
+    console.error('Error creating seller profile:', error);
     return null;
   }
+
   return data as Seller;
 };
 
-export const updateSeller = async (id: string, updates: Partial<Seller>): Promise<Seller | null> => {
-  const { data, error } = await supabase
-    .from('sellers')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating seller:', error);
-    return null;
-  }
-  return data as Seller;
-};
-
-export const deleteSeller = async (id: string) => {
-  const { error } = await supabase.from('sellers').delete().eq('id', id);
-  if (error) console.error('Error deleting seller:', error);
-};
 
 // --- CLIENTS ---
 
