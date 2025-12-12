@@ -63,7 +63,7 @@ export const loginSeller = async (email: string, password: string): Promise<Logi
   const { data, error } = await supabase
     .from('sellers')
     .select('*')
-    .eq('id', authData.user.id)
+    .eq('email', email)
     .eq('active', true)
     .single();
 
