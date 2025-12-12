@@ -38,49 +38,23 @@ export const clearSession = () => {
 // --- AUTH ---
 
 export const loginSeller = async (email: string, password: string): Promise<LoginResult> => {
-  // 1. Authenticate with Supabase
-  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  // 2. Handle authentication errors
-  if (authError) {
-    console.error('Supabase auth error:', authError);
-    if (authError.message.includes('Failed to fetch')) {
-      throw new Error('network error');
-    }
-    return { success: false, message: 'Credenciales inválidas.' };
-  }
-
-  // This check is for safety, though Supabase should return a user on success
-  if (!authData?.user) {
-    console.error('Login successful but no user object returned.');
-    return { success: false, message: 'No se pudo obtener el usuario.' };
-  }
-
-  // 3. Fetch the seller's profile and check if it's active
   const { data, error } = await supabase
     .from('sellers')
     .select('*')
     .eq('email', email)
+    .eq('password', password)  // 👈 antes usabas esto
     .eq('active', true)
     .single();
 
-  // 4. Handle profile errors or inactive profile
   if (error || !data) {
-    console.error('Could not find active seller profile:', error);
-    // Sign out to prevent a lingering auth session without a valid app profile
-    await supabase.auth.signOut();
-    clearSession();
-    return { success: false, message: 'El usuario está inactivo o no tiene un perfil de vendedor.' };
+    return { success: false, message: 'Credenciales inválidas o usuario inactivo.' };
   }
 
-  // 5. Success: save session and return user data
-  const user = data as Seller;
-  saveSession(user);
-  return { success: true, user, message: 'Inicio de sesión exitoso.' };
+  saveSession(data);
+
+  return { success: true, user: data, message: 'Inicio de sesión exitoso.' };
 };
+
 
 // --- SALES ---
 
